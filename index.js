@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -26,10 +26,32 @@ async function run() {
         await client.connect();
         const alphabetCollection = client.db("dragDropClcDB").collection("alphabets");
 
+        //Inserting a alphabet
+        app.post("/alphabets", async (req, res) => {
+            const alphabet = req.body;
+            const result = await alphabetCollection.insertOne(alphabet);
+            res.send(result);
+        });
+
         //Getting all alphabets
         app.get("/alphabets", async (req, res) => {
             const alphabets = await alphabetCollection.find().toArray();
             res.send(alphabets);
+        });
+
+        //Getting a specific alphabet using alphabet Id
+        app.get("/alphabets/:id", async (req, res) => {
+            const alphabetId = req.params?.id;
+            try {
+                const query = { _id: ObjectId(alphabetId) };
+                const alphabet = await alphabetCollection.findOne(query);
+                res.send(alphabet);
+            } catch (error) {
+                res.status(400).send({
+                    success: false,
+                    message: "Invalid alphabet Id",
+                });
+            }
         });
     } finally {
         //
